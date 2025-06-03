@@ -16,7 +16,14 @@ class StockEnv(gym.Env):
 
     def __init__(self, csv_path, initial_balance=1_000_00):
         super(StockEnv, self).__init__()
+        # 1) Читаем CSV
         self.df = pd.read_csv(csv_path, parse_dates=True, index_col=0)
+
+        # 2) Принудительно конвертируем столбец 'Close' в числа и убираем NaN
+        self.df['Close'] = pd.to_numeric(self.df['Close'], errors='coerce')
+        self.df = self.df.dropna(subset=['Close'])
+
+        # 3) Извлекаем ценовой массив уже в чистом виде
         self.prices = self.df['Close'].values
         self.n_steps = len(self.prices)
         self.current_step = 0

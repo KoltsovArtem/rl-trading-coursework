@@ -12,6 +12,8 @@ class StockEnv(gym.Env):
     def __init__(self, csv_path, initial_balance=1_000_00):
         super(StockEnv, self).__init__()
         self.df = pd.read_csv(csv_path, parse_dates=True, index_col=0)
+        self.df['Close'] = pd.to_numeric(self.df['Close'], errors='coerce')
+        self.df = self.df.dropna(subset=['Close'])
         self.prices = self.df['Close'].values
         self.n_steps = len(self.prices)
         self.current_step = 0

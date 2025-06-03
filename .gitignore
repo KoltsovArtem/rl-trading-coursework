@@ -1,0 +1,22 @@
+# ---- Виртуальное окружение ----
+rltrade/
+venv/
+
+# ---- Результаты обучения (если они большие) ----
+results/*.zip
+
+# ---- Логи, временные файлы Python ----
+__pycache__/
+*.pyc
+*.pyo
+
+# ---- Данные (если не хотите хранить DJIA-CSV) ----
+# data/djia/
+# data/*.csv   # если планируете скачивать всё заново через ноутбук/скрипт
+
+# ---- Jupyter Notebook checkpoints ----
+.ipynb_checkpoints/
+
+# ---- Файлы IDE (PyCharm, VSCode и т. д.) ----
+.vscode/
+.idea/

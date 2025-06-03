@@ -21,20 +21,24 @@ class QLearningAgent:
 
 def discretize_price(price, price_min, price_max, n_bins):
     """
-    Простая дискретизация цены в n_bins.
-    Возвращает индекс bin-а для данного price.
+    Дискретизируем price в n_bins и гарантируем, что индекс не выходит за [0, n_bins-1].
     """
     bins = np.linspace(price_min, price_max, n_bins + 1)
-    return np.digitize(price, bins) - 1  # индексы от 0 до n_bins-1
+    # np.digitize возвращает число от 1 до len(bins) (то есть до n_bins+1),
+    # поэтому минус 1 даст диапазон 0…n_bins. Защитим от выхода за границы:
+    idx = np.digitize(price, bins) - 1
+    # clip-им так, чтобы idx лежал в [0, n_bins-1]
+    return int(np.clip(idx, 0, n_bins - 1))
+
 
 def run_q_learning(csv_path, n_bins=10, n_epochs=5):
-    """
-    Загружает исторические данные, дискретизирует цену в n_bins,
-    запускает несколько эпох Q-learning и возвращает итоговую Q-таблицу.
-    """
     # 1) Чтение данных
     df = pd.read_csv(csv_path, parse_dates=True, index_col=0)
-    # Берём только колонку 'Close'
+
+    # Принудительно конвертируем столбец 'Close' в числа и убираем строки с некорректными значениями
+    df['Close'] = pd.to_numeric(df['Close'], errors='coerce')
+    df = df.dropna(subset=['Close'])
+
     prices = df['Close'].values
     price_min, price_max = prices.min(), prices.max()
     n_states = n_bins

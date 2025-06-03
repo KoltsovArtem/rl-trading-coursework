@@ -12,20 +12,22 @@ class StockEnv(gym.Env):
     def __init__(self, csv_path, initial_balance=1_000_00):
         super(StockEnv, self).__init__()
         self.df = pd.read_csv(csv_path, parse_dates=True, index_col=0)
+        self.df['Close'] = pd.to_numeric(self.df['Close'], errors='coerce')
+        self.df = self.df.dropna(subset=['Close'])
         self.prices = self.df['Close'].values
+
         self.n_steps = len(self.prices)
         self.current_step = 0
 
-        # У DDPG action_space должен быть Box (континуальный), но мы оставим Discrete для упрощения:
-        # Для настоящего DDPG нужно изменить логику: например, action ∈ [−1,1] для пропорции покупки/продажи.
-        # Здесь оставим дискретный каркас, и SB3 сам приведет его к Box.
-        self.action_space = spaces.Discrete(3)
+        # Теперь action_space — Box, от 0.0 до 2.0
+        self.action_space = spaces.Box(low=0.0, high=2.0, shape=(1,), dtype=np.float32)
         self.observation_space = spaces.Box(low=0, high=1, shape=(3,), dtype=np.float32)
 
         self.initial_balance = initial_balance
         self.balance = initial_balance
         self.shares_held = 0
         self.net_worth = initial_balance
+
 
     def _next_observation(self):
         price = self.prices[self.current_step]
@@ -37,8 +39,10 @@ class StockEnv(gym.Env):
     def step(self, action):
         done = False
         price = self.prices[self.current_step]
-        # Для DDPG будем считать действие как float, но здесь просто приведём к int
-        action = int(action)
+
+        # Преобразование непрерывного действия → целое 0,1,2
+        action = int(np.clip(action, 0, 2)[0])
+
         if action == 0 and self.balance >= price:
             self.shares_held += 1
             self.balance -= price
